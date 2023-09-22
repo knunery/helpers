@@ -1,3 +1,33 @@
+/* v3 */
+public class EmptyStringToNullConverter<T> : JsonConverter<T?> where T : class
+{
+    public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.String && reader.GetString() == "")
+        {
+            return null;
+        }
+
+        using (var jsonDoc = JsonDocument.ParseValue(ref reader))
+        {
+            var rootElement = jsonDoc.RootElement.Clone();
+            return JsonSerializer.Deserialize<T>(rootElement.GetRawText());
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, T? value, JsonSerializerOptions options)
+    {
+        if (value == null)
+        {
+            writer.WriteNullValue();
+        }
+        else
+        {
+            JsonSerializer.Serialize(writer, value, options);
+        }
+    }
+}
+
 /* v2 */
 public class SecondaryConverter<T> : JsonConverter<T>
 {
