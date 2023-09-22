@@ -1,3 +1,37 @@
+/* v4 */
+public class EmptyStringToNullConverter<T> : JsonConverter<T?> where T : class
+{
+    [ThreadStatic]
+    private static bool _isInternalCall;
+
+    public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (!_isInternalCall)
+        {
+            if (reader.TokenType == JsonTokenType.String && reader.GetString() == "")
+            {
+                return null;
+            }
+        }
+
+        try
+        {
+            _isInternalCall = true;
+            return JsonSerializer.Deserialize<T>(ref reader, options);
+        }
+        finally
+        {
+            _isInternalCall = false;
+        }
+    }
+
+    public override void Write(Utf8JsonWriter writer, T? value, JsonSerializerOptions options)
+    {
+        JsonSerializer.Serialize(writer, value, options);
+    }
+}
+
+
 /* v3 */
 public class EmptyStringToNullConverter<T> : JsonConverter<T?> where T : class
 {
